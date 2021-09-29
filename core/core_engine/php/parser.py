@@ -419,17 +419,17 @@ def is_controllable(expr, flag=None):  # 获取表达式中的变量，看是否
     if isinstance(expr, php.New) or isinstance(expr, php.MethodCall) or isinstance(expr, php.FunctionCall) or isinstance(expr, php.StaticMethodCall):
         # 一个新的问题，输入可能不来自全局变量，可能来自函数，加入一次check
         # check is_repair
-        if expr in is_controlled_params:
+        if expr in controlled_params:
             logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr.name))
             return 1, expr
         if is_repair(expr.name):
             return 2, expr
-        if expr.name in is_controlled_params:
+        if expr.name in controlled_params:
             logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr.name))
             return 1, expr
 
         return 3, expr
-    if expr in is_controlled_params:
+    if expr in controlled_params:
         logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr.name))
         return 1, expr
     if isinstance(expr, php.Variable):
