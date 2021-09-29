@@ -398,6 +398,11 @@ def is_controllable(expr, flag=None):  # 获取表达式中的变量，看是否
         '$_REQUEST',
         '$_COOKIE',
         '$_FILES',
+        'get',
+        'post',
+        'input',
+        'I',
+        'request',
         # '$_SERVER', # 暂时去掉了，误报率太高了
         '$HTTP_POST_FILES',
         '$HTTP_COOKIE_VARS',
@@ -409,29 +414,26 @@ def is_controllable(expr, flag=None):  # 获取表达式中的变量，看是否
 
     # 传入合并
     controlled_params += is_controlled_params
-
     if isinstance(expr, php.ObjectProperty):
         return 3, expr
-
     if isinstance(expr, php.New) or isinstance(expr, php.MethodCall) or isinstance(expr, php.FunctionCall) or isinstance(expr, php.StaticMethodCall):
         # 一个新的问题，输入可能不来自全局变量，可能来自函数，加入一次check
-
         # check is_repair
+        if expr in is_controlled_params:
+            logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr.name))
+            return 1, expr
         if is_repair(expr.name):
             return 2, expr
-
         if expr.name in is_controlled_params:
             logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr.name))
             return 1, expr
 
         return 3, expr
-
+    if expr in is_controlled_params:
+        logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr.name))
+        return 1, expr
     if isinstance(expr, php.Variable):
         expr = expr.name
-
-    if isinstance(expr, php.Cast):
-        expr = expr.expr.name
-
     if expr in controlled_params:  # 当为可控变量时 返回1
         logger.debug('[AST] is_controllable --> {expr}'.format(expr=expr))
         if flag:
@@ -1692,7 +1694,17 @@ def analysis_functioncall_node(node, back_node, vul_function, vul_lineno, functi
     if is_repair(function_name):
         logger.info("[AST] Function {} is repair func. fail control back.".format(function_name))
         return False
-
+    controlled_funcs = [
+        'get',
+        'post',
+        'input',
+        'I',
+        'request'
+    ]
+    if function_name in controlled_funcs:
+        logger.debug('[AST] is_controllable --> {expr}'.format(expr=function_name))
+        set_scan_results(1, None, node.lineno, vul_function, function_name, node.lineno)
+        return
     for param in params:
         param = php.Variable(param)
         param_lineno = node.lineno
