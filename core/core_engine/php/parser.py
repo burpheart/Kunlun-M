@@ -1525,13 +1525,12 @@ def anlysis_function(node, back_node, vul_function, function_params, vul_lineno,
         'get',
         'post'
         ]
-        if function_name in controlled_funcs:
-                logger.debug('[AST] is_controllable --> {expr}'.format(expr=function_name))
-                set_scan_results(1, None, node.lineno, vul_function, vul_function, node.lineno)
-                return
         if int(node.lineno) == int(vul_lineno):
+            if function_name in controlled_funcs:
+                        logger.debug('[AST] is_controllable --> {expr}'.format(expr=function_name))
+                        set_scan_results(1, None, vul_lineno, vul_function, function_params, vul_lineno)
+                        return
             if function_name == vul_function:  # 函数体中存在敏感函数，开始对敏感函数前的代码进行检测
-
                 function_params = get_all_functioncall_params(node)
 
                 for param in function_params:
